@@ -1,6 +1,14 @@
 # Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app). 
+
+// npx create-react-app "name-for-your-directory"
+// Copy/paste in all necessary dependencies in package.json
+// npm install   <--run inside project directory to install dependencies
+// npx hardhat   <--generates new hardhat project
+// touch .env    <--stores global variables for entire app (these should be secret)
+// make sure .env in gitignore
+// add require("dotenv").config(); to hardhat.config.js // allows env variables to be read into hardhat
 
 ## Available Scripts
 

@@ -2,11 +2,15 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app). 
 
+TO START A REACT + SOLIDITY PROJECT:
+
 // npx create-react-app "name-for-your-directory"
 
 // Copy/paste in all necessary dependencies in package.json
 
 // npm install   <--run inside project directory to install dependencies
+
+// npm audit fix --force
 
 // npx hardhat   <--generates new hardhat project
 
@@ -23,6 +27,16 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 // git commit -m "Description of Commit"
 
 // git push
+
+// npx hardhat node
+
+// npm install --save-dev @nomicfoundation/hardhat-toolbox <--follow instructions after to get all missing dependencies
+
+// networks: {
+    localhost: {}
+  },  <-- add these 3 lines to hardhat.config.js file after the solidity version
+
+// npx hardhat compile <-- compile smart contracts into bytecode & abis
 
 ## Available Scripts
 

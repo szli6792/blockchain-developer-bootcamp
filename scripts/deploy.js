@@ -5,7 +5,7 @@ async function main() {
   // Deploy contract
   const token = await Token.deploy() // sends info away
   await token.deploymentTransaction().wait(2); // wait to receive
-  const token_address = await token.getAddress()
+  const token_address = await token.getAddress() // can just use token now instead of .getAddress?
   console.log(`Token Deployed to: ${token_address}`)
 }
 

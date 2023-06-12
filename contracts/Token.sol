@@ -95,6 +95,7 @@ contract Token { // contains all smart contract code
     }
 
     // Allow delegated sending of tokens (after approval of the token holder) for any token holder
+    // Useful for AMMs
     function transferFrom(
         address _from,
         address _to, 

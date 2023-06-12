@@ -10,7 +10,8 @@ describe('Token', () => {
     let token, 
         accounts, 
         deployer,
-        receiver
+        receiver,
+        exchange
 
     beforeEach(async () => {
         // Create test accounts

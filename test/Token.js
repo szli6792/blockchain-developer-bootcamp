@@ -17,6 +17,7 @@ describe('Token', () => {
         accounts  = await ethers.getSigners()
         deployer = await accounts[0]
         receiver = await accounts[1]
+        exchange = await accounts[2]
 
         // Fetch Token from Local Blockchain
         const Token = await ethers.getContractFactory('Token') // create smart contract
@@ -69,7 +70,7 @@ describe('Token', () => {
     describe('Token transfer', () => {
         let amount, transaction, result, totalSupply
 
-        describe('Test valid transfer:', () => {
+        describe('Test a valid transfer:', () => {
 
             beforeEach(async () => {
                 amount = tokens(100)
@@ -114,7 +115,7 @@ describe('Token', () => {
             })
         })
 
-        describe('Test invalid transfer:', () => {
+        describe('Test an invalid transfer:', () => {
 
             it('Rejects insufficient balance', async () => {
                 // Check if transaction is reverted
@@ -123,6 +124,45 @@ describe('Token', () => {
 
             it('Reject invalid addresses', async () => {
                 await expect(token.connect(deployer).transfer('0x0000000000000000000000000000000000000000', tokens(1))).to.be.reverted
+            })
+        })
+    })
+    describe('Token Approval', () => {
+        let amount, transaction, result, totalSupply
+
+        beforeEach(async () => {
+            amount = tokens(100)
+
+            // Make a token transfer
+            transaction = await token.connect(deployer).approve(exchange, amount) // connects deployer wallet to write to blockchain (pay the gas fee to sign which prevents network spam)
+            result = await transaction.wait() // wait for transaction receipt
+        })
+
+        describe('Test a valid approval:', () => {
+
+            it('Allocates an allowance for delegated token spending', async () => {
+                expect(await token.allowance(deployer, exchange)).to.equal(amount)
+            })
+
+            it('Emits an approval event', async () => {
+
+                // Check event name
+                expect(result.logs[0].fragment.name).to.equal('Approval')
+                console.log(`\t   Event Name: ${result.logs[0].fragment.name}`)
+
+                // Check event details
+                expect(result.logs[0].args.owner).to.equal(await deployer.getAddress())
+                console.log(`\t   Owner Address: ${result.logs[0].args.owner}`)
+                expect(result.logs[0].args.spender).to.equal(await exchange.getAddress())
+                console.log(`\t   Spender Address: ${result.logs[0].args.spender}`)
+                expect(result.logs[0].args.value).to.equal(amount)
+                console.log(`\t   Amount Approved: ${result.logs[0].args.value}`)
+            })
+        })
+
+        describe('Test an invalid approval:', () => {
+            it('Rejects invalid spenders', async () => {
+                await expect(token.connect(deployer).approve('0x0000000000000000000000000000000000000000', amount)).to.be.reverted
             })
         })
     })

@@ -22,9 +22,17 @@ contract Token { // contains all smart contract code
     // Track Balances (allow different addresses to have different balances of this token)
     mapping(address => uint256) public balanceOf; //key-value pair 1-to-1 mapping
 
+    // Track spending allowances
+    mapping(address => mapping(address => uint256)) public allowance; // returns all potential spenders and how much they are approved for
+
     event Transfer( 
         address indexed from, 
         address indexed to, 
+        uint256 value); //events send notifications
+
+    event Approval( 
+        address indexed owner, 
+        address indexed spender, 
         uint256 value); //events send notifications
 
     // We use a constructor because the exchange needs to have the ability to mint token pairs
@@ -39,7 +47,7 @@ contract Token { // contains all smart contract code
             balanceOf[msg.sender] = totalSupply; // Take all the tokens and assign them to deployment address
         }
 
-    // Allow sending of tokens
+    // Allow simple sending of tokens
     function transfer(
         address _to, 
         uint256 _value) 
@@ -54,6 +62,19 @@ contract Token { // contains all smart contract code
         balanceOf[_to] = balanceOf[_to] + _value; // read balance of receiver and add the incoming value
         // Emit event
         emit Transfer(msg.sender, _to, _value);
+
+        return true;
+    }
+
+    // Allow spending approval
+    function approve(
+        address _spender,
+        uint256 _value)
+    public returns (bool success) {
+        require(_spender != address(0));
+        allowance[msg.sender][_spender] = _value;
+        // Emit event
+        emit Approval(msg.sender, _spender, _value);
 
         return true;
     }

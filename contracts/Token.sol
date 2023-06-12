@@ -24,6 +24,8 @@ contract Token { // contains all smart contract code
     string public symbol;
     uint256 public totalSupply;
     
+    // Mappings are 0 by default:
+    
     // Track balances (allow different addresses to have different balances of this token)
     mapping(address => uint256) public balanceOf; // key-value pair 1-to-1 mapping
 

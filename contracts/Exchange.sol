@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "hardhat/console.sol";
 import "./Token.sol"; // bring in simple ERC20 Token smart contract
 
+//----------------------------------------------------------------
+
 // A SIMPLE ERC20 ORDERBOOK DEX: 
     // Track Fee Account
     // Deposit Tokens
@@ -14,13 +16,15 @@ import "./Token.sol"; // bring in simple ERC20 Token smart contract
     // Cancel Orders
     // Fill Orders
     // Charge Fees
-    
 
 contract Exchange {
 
     // Track Fee Account
     address public feeAccount;
     uint256 public feePercent; // does a fee-less DEX exist?
+
+    // Init Counter Cache
+    uint256 public orderCount; // track number of orders, starts at 0
 
     constructor(address _feeAccount, uint256 _feePercent) {
         feeAccount = _feeAccount;
@@ -31,11 +35,47 @@ contract Exchange {
     // ERC20 contract : (trader address : balance)
     mapping(address => mapping(address => uint256)) public tokenBalance; // 0 by default
 
+    // Keep track of orders (database style):
+    // Order ID Key : DOM_Order struct instance
+    mapping(uint256 => orderDetails) public order;
+
+    // Store order details:
+    struct orderDetails { // Depth Of Market Order
+        uint256 id; // Order ID
+        address maker; // Order maker
+        uint256 timestamp; // When order was created
+        address _tokenGet; // Any ERC20 smart contract address
+        uint256 _amountGet;
+        address _tokenGive; // Any other ERC20 smart contract address
+        uint256 _amountGive;
+    }
+
     // Deposit Event
-    event Deposit(address token, address user, uint256 amount, uint256 balance);
+    event Deposit(
+        address token,
+        address user,
+        uint256 amount, 
+        uint256 balance
+    );
 
     // Withdraw Event
-    event Withdrawal(address token, address user, uint256 amount, uint256 balance);
+    event Withdrawal(
+        address token, 
+        address user, 
+        uint256 amount, 
+        uint256 balance
+    );
+
+    // Order Event
+    event Order(
+        uint256 id,
+        address maker,
+        uint256 timestamp,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive
+    );
 
 //----------------------------------------------------------------
 
@@ -101,10 +141,45 @@ contract Exchange {
 //----------------------------------------------------------------
 
     // Make Orders
+    function makeOrder(
+        address _tokenGet, // Any ERC20 smart contract address
+        uint256 _amountGet,
+        address _tokenGive, // Any other ERC20 smart contract address
+        uint256 _amountGive)
+    public {
+        // Require sufficient token balance
+        require(tokenBalance[_tokenGive][msg.sender] >= _amountGive);
 
+        // Increment order count
+        orderCount = orderCount + 1;
+
+        order[orderCount] = orderDetails(
+            orderCount,
+            msg.sender,
+            block.timestamp, // in epoch time
+            _tokenGet,
+            _amountGet,
+            _tokenGive,
+            _amountGive
+        );
+
+        // Emit event
+        emit Order(
+            orderCount,
+            msg.sender,
+            block.timestamp, // in epoch time
+            _tokenGet,
+            _amountGet,
+            _tokenGive,
+            _amountGive
+        );
+    }
+//----------------------------------------------------------------
     // Cancel Orders
 
+//----------------------------------------------------------------
     // Fill Orders
 
+//----------------------------------------------------------------
     // Charge Fees
 }

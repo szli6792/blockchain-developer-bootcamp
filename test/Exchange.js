@@ -25,6 +25,9 @@ describe('Exchange', () => {
         // Init Token1 on Local Blockchain
         const Token1 = await ethers.getContractFactory('Token') // create smart contract for Token
 
+        // Init Token1 on Local Blockchain
+        const Token2 = await ethers.getContractFactory('Token') // create smart contract for Token
+
         // Create test accounts
         accounts  = await ethers.getSigners()
         deployer = await accounts[0]
@@ -35,6 +38,11 @@ describe('Exchange', () => {
         // Fetch Token1 from Local Blockchain 
         // (also deploys token1 totalSupply to deployer)
         token1 = await Token1.deploy('Elektroniczna Zlotowka','ePLN', 1000000) // sends smart contract away for deployment, gets receipt
+
+        // Fetch Token2 from Local Blockchain 
+        // (also deploys token1 totalSupply to deployer)
+        token2 = await Token2.deploy('Elektronna hryvnia','eUAH', 1000000) // sends smart contract away for deployment, gets receipt
+
 
         // Give user1 some Token1
         let transaction = await token1.connect(deployer).transfer(trader1, fundingAmount1)
@@ -49,14 +57,14 @@ describe('Exchange', () => {
 
     describe('Deployment', () => {
 
-        it('tracks the fee account', async () => {
+        it('Tracks the fee account', async () => {
 
             // Check that fee account is tracked
             expect(await exchange.feeAccount()).to.be.equal(await feeAccount.getAddress())
             console.log(`\t Fee Account: ${await exchange.feeAccount()}`)
         })
 
-        it('tracks the feepercent', async () => {
+        it('Tracks the fee percent', async () => {
 
             // Check that fee account is tracked
             expect(await exchange.feePercent()).to.be.equal(feePercent)
@@ -81,7 +89,7 @@ describe('Exchange', () => {
                 result = await transaction.wait()
             })
 
-            it('tracks the token deposit', async () => {
+            it('Tracks the token deposit', async () => {
 
                 // Check exchange token balance
                 expect(await token1.balanceOf(exchange)).to.be.equal(amount)
@@ -133,21 +141,21 @@ describe('Exchange', () => {
                 amount3 = tokens(2) // 0 + 10 - 8 = 2
                 // totalSupply = await token1.totalSupply()
                 
-                // WE FIRST NEED TOKENS TO WITHDRAW:
+                // WE FIRST NEED TOKENS TO DEPOSIT SOMETHING:
                 // Approve Token
                 transaction = await token1.connect(trader1).approve(exchange, amount1)
                 await transaction.wait()
 
                 // Deposit Token
                 transaction = await exchange.connect(trader1).depositToken(token1, amount1)
-                result = await transaction.wait()
 
+                // NOW WE CAN WITHDRAW
                 // Withdraw Token
                 transaction = await exchange.connect(trader1).withdrawToken(token1, amount2)
                 result = await transaction.wait()
             })
 
-            it('tracks the token withdrawal', async () => {
+            it('Tracks the token withdrawal', async () => {
 
                 // Check exchange token balance
                 expect(await token1.balanceOf(exchange)).to.be.equal(amount3)
@@ -186,7 +194,69 @@ describe('Exchange', () => {
                 // No tokens to withdraw
                 await expect(exchange.connect(trader1).withdrawToken(token1, amount1)).to.be.reverted
             })
+        })
+    })
 
+    describe('Making orders', () => {
+        let transaction, result
+
+        describe('Test Valid Order Creation', async () => {
+            beforeEach(async () => {
+                amount1 = tokens(10)
+                amount2 = tokens(8)
+                // totalSupply = await token1.totalSupply()
+                
+                // WE FIRST NEED TOKENS TO DEPOSIT SOMETHING:
+                // Approve Token
+                transaction = await token1.connect(trader1).approve(exchange, amount1)
+                await transaction.wait()
+
+                // Deposit Token
+                transaction = await exchange.connect(trader1).depositToken(token1, amount1)
+
+                // NOW WE CAN MAKE ORDER
+                // Make an order
+                transaction = await exchange.connect(trader1).makeOrder(token2, amount2, token1, amount2)
+                result = await transaction.wait()
+            })
+
+            it('Tracks the newly created order', async () => {
+
+                // Check if order cache was incremented
+                expect(await exchange.orderCount()).to.be.equal(1)
+            })
+
+            it('Emits an Order event', async () => {
+
+                // Check event name
+                expect(result.logs[0].fragment.name).to.be.equal('Order')
+                console.log(`\t   Event Name: ${result.logs[0].fragment.name}`)
+
+                // Check event details
+                expect(result.logs[0].args.id).to.be.equal(1)
+                console.log(`\t   Order ID: ${result.logs[0].args.id}`)
+                expect(result.logs[0].args.maker).to.be.equal(await trader1.getAddress())
+                console.log(`\t   Order Maker: ${result.logs[0].args.maker}`)
+                expect(result.logs[0].args.timestamp).to.be.at.least(1)
+                console.log(`\t   Epoch Time: ${result.logs[0].args.timestamp}`)
+                expect(result.logs[0].args.tokenGet).to.be.equal(await token2.getAddress())
+                console.log(`\t   Buying Token: ${result.logs[0].args.tokenGet}`)
+                expect(result.logs[0].args.amountGet).to.be.equal(amount2)
+                console.log(`\t   Buying Amount: ${result.logs[0].args.amountGet}`)
+                expect(result.logs[0].args.tokenGive).to.be.equal(await token1.getAddress())
+                console.log(`\t   Selling Token: ${result.logs[0].args.tokenGive}`)
+                expect(result.logs[0].args.amountGive).to.be.equal(amount2)
+                console.log(`\t   Selling Amount: ${result.logs[0].args.amountGive}`)
+            })
+        })
+
+        describe('Test Invalid Order Creation', async () => {
+
+            it('Fails when insufficient balance', async () => {
+
+                // No tokens to order with
+                await expect(exchange.connect(trader1).makeOrder(token2, amount2, token1, amount2)).to.be.reverted
+            })
         })
     })
 })

@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
 
+//----------------------------------------------------------------
+
 // A SIMPLE ERC20 TOKEN: This smart contract needs to keep track of token balances and spending allowances, 
 // as well as simple sending and receiving, and delegated sending and receiving, 
 // in order to allow it to be directly sendable between accounts, or tradable custodially on a decentralized exchange.
@@ -42,6 +44,7 @@ contract Token { // contains all smart contract code
         address indexed spender, 
         uint256 value); //events send notifications
 
+//----------------------------------------------------------------
     // We use a constructor because our dex exchange will need to have the ability to mint IOUs for token pairs
     constructor(
         string memory _name, 
@@ -54,6 +57,7 @@ contract Token { // contains all smart contract code
             balanceOf[msg.sender] = totalSupply; // Take all the tokens and assign them to deployment address
         }
 
+//----------------------------------------------------------------
     // Internal transfer utility (private function) for use in our publically callable transfer functions
     function _transfer(
         address _from,
@@ -70,6 +74,7 @@ contract Token { // contains all smart contract code
         emit Transfer(_from, _to, _value);
     }
 
+//----------------------------------------------------------------
     // Allow simple (direct) sending of tokens by any token holder
     function transfer(
         address _to, 
@@ -83,6 +88,7 @@ contract Token { // contains all smart contract code
         return true;
     }
 
+//----------------------------------------------------------------
     // Allow spending approval
     function approve(
         address _spender,
@@ -96,6 +102,7 @@ contract Token { // contains all smart contract code
         return true;
     }
 
+//----------------------------------------------------------------
     // Allow delegated sending of tokens (after approval of the token holder) for any token holder
     // Useful for AMMs
     function transferFrom(

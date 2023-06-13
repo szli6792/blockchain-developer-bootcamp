@@ -34,6 +34,11 @@ contract Exchange {
     // Deposit Event
     event Deposit(address token, address user, uint256 amount, uint256 balance);
 
+    // Withdraw Event
+    event Withdrawal(address token, address user, uint256 amount, uint256 balance);
+
+//----------------------------------------------------------------
+
     // Deposit ERC20 Tokens
     function depositToken(
         address _token, // Any ERC20 smart contract address
@@ -45,16 +50,18 @@ contract Exchange {
         // (1) user interacts with exchange contract
         // (2) exchange contract calls token contract
         // Exchange level protection: 
-        // require that the delegated transfer is 
+        // require that the DELEGATED TRANFER is 
         // called successfully before any balance is updated
         require(Token(_token).transferFrom(msg.sender, address(this), _amount)); 
         
-        // Update user balance
+        // Update user balance (tokens already in exchange wallet but this is for good accounting)
         tokenBalance[_token][msg.sender] = tokenBalance[_token][msg.sender] + _amount;
         
         // Emit an event
         emit Deposit(_token, msg.sender, _amount, tokenBalance[_token][msg.sender]);
     }
+
+//----------------------------------------------------------------
 
     // Check Balances (wrapper funciton that checks value of a mapping)
     // ERC20 standard recommends this additional wrapping
@@ -65,7 +72,33 @@ contract Exchange {
         return tokenBalance[_token][_user];
     }
 
+//----------------------------------------------------------------
+
     // Withdraw ERC20 Tokens
+    function withdrawToken(
+        address _token, // Any ERC20 smart contract address
+        uint256 _amount) 
+    public {
+        // Ensure user has enough tokens to withdraw
+        require(tokenBalance[_token][msg.sender] >= _amount);
+
+        // Transfer tokens from exchange to user:
+        // Exchange is doing this on user request!
+        // (1) user interacts with exchange contract
+        // (2) exchange contract calls token contract
+        // Exchange level protection: 
+        // require that the DIRECT TRANSFER is 
+        // called successfully before any balance is updated
+        require(Token(_token).transfer(msg.sender, _amount)); 
+        
+        // Update user balance (tokens already left but this is for good accounting)
+        tokenBalance[_token][msg.sender] = tokenBalance[_token][msg.sender] - _amount;
+        
+        // Emit an event
+        emit Withdrawal(_token, msg.sender, _amount, tokenBalance[_token][msg.sender]);
+    }
+
+//----------------------------------------------------------------
 
     // Make Orders
 

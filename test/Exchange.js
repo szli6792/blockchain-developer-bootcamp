@@ -72,6 +72,7 @@ describe('Exchange', () => {
             beforeEach(async () => {
                 amount = tokens(10)
                 // totalSupply = await token1.totalSupply()
+
                 // Approve Token
                 transaction = await token1.connect(trader1).approve(exchange, amount)
                 await transaction.wait()
@@ -92,7 +93,7 @@ describe('Exchange', () => {
                 expect(await exchange.balanceOf(token1, trader1)).to.be.equal(amount)
             })
 
-            it('Emits an approval event', async () => {
+            it('Emits a deposit event', async () => {
 
                 // console.log(result.logs) // It logs two events (function within a function)
 
@@ -116,6 +117,74 @@ describe('Exchange', () => {
 
             it('Fails when no tokens are approved', async () => {
                 await expect(exchange.connect(trader1).depositToken(token1, amount)).to.be.reverted
+            })
+
+        })
+    })
+
+    describe('Withdrawing Tokens', () => {
+        let amount, transaction, result //, totalSupply
+
+        describe('Test Valid Withdrawal', () => {
+
+            beforeEach(async () => {
+                amount1 = tokens(10)
+                amount2 = tokens(8)
+                amount3 = tokens(2) // 0 + 10 - 8 = 2
+                // totalSupply = await token1.totalSupply()
+                
+                // WE FIRST NEED TOKENS TO WITHDRAW:
+                // Approve Token
+                transaction = await token1.connect(trader1).approve(exchange, amount1)
+                await transaction.wait()
+
+                // Deposit Token
+                transaction = await exchange.connect(trader1).depositToken(token1, amount1)
+                result = await transaction.wait()
+
+                // Withdraw Token
+                transaction = await exchange.connect(trader1).withdrawToken(token1, amount2)
+                result = await transaction.wait()
+            })
+
+            it('tracks the token withdrawal', async () => {
+
+                // Check exchange token balance
+                expect(await token1.balanceOf(exchange)).to.be.equal(amount3)
+
+                // Check internal exchange token balance allocation
+                expect(await exchange.tokenBalance(token1, trader1)).to.be.equal(amount3)
+
+                // Check function that wraps the above tokenBalance mapping
+                expect(await exchange.balanceOf(token1, trader1)).to.be.equal(amount3)
+            })
+
+            it('Emits a withdrawal event', async () => {
+
+                // console.log(result.logs) // It logs two events (function within a function)
+
+                // Check event name
+                expect(result.logs[1].fragment.name).to.be.equal('Withdrawal')
+                console.log(`\t   Event Name: ${result.logs[1].fragment.name}`)
+
+                // Check event details
+                expect(result.logs[1].args[0]).to.be.equal(await token1.getAddress())
+                console.log(`\t   Token: ${result.logs[1].args[0]}`)
+                expect(result.logs[1].args[1]).to.be.equal(await trader1.getAddress())
+                console.log(`\t   Withdrawer: ${result.logs[1].args[1]}`)
+                expect(result.logs[1].args[2]).to.be.equal(amount2)
+                console.log(`\t   Amount Withdrawn: ${result.logs[1].args[2]}`)
+                expect(result.logs[1].args[3]).to.be.equal(amount3)
+                console.log(`\t   Token Balance: ${result.logs[1].args[3]}`)
+            })
+        })
+
+        describe('Test Invalid Withdrawal', () => {
+
+            it('Fails when insufficient balance', async () => {
+
+                // No tokens to withdraw
+                await expect(exchange.connect(trader1).withdrawToken(token1, amount1)).to.be.reverted
             })
 
         })

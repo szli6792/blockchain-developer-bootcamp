@@ -44,11 +44,14 @@ contract Exchange {
         uint256 id; // Order ID
         address maker; // Order maker
         uint256 timestamp; // When order was created
-        address _tokenGet; // Any ERC20 smart contract address
-        uint256 _amountGet;
-        address _tokenGive; // Any other ERC20 smart contract address
-        uint256 _amountGive;
+        address tokenGet; // Any ERC20 smart contract address
+        uint256 amountGet;
+        address tokenGive; // Any other ERC20 smart contract address
+        uint256 amountGive;
     }
+
+    // Keep track of cancelled orders:
+    mapping(uint256 => bool) public orderCancelled;
 
     // Deposit Event
     event Deposit(
@@ -77,6 +80,16 @@ contract Exchange {
         uint256 amountGive
     );
 
+    // Cancel Event
+    event Cancel(
+        uint256 id,
+        address maker,
+        uint256 timestamp,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive
+    );
 //----------------------------------------------------------------
 
     // Deposit ERC20 Tokens
@@ -165,17 +178,44 @@ contract Exchange {
 
         // Emit event
         emit Order(
-            orderCount,
-            msg.sender,
+            order[orderCount].id,
+            order[orderCount].maker,
             block.timestamp, // in epoch time
-            _tokenGet,
-            _amountGet,
-            _tokenGive,
-            _amountGive
+            order[orderCount].tokenGet,
+            order[orderCount].amountGet,
+            order[orderCount].tokenGive,
+            order[orderCount].amountGive
         );
     }
 //----------------------------------------------------------------
     // Cancel Orders
+    function cancelOrder (
+        uint256 _id
+    ) public {
+        // Fetch Order
+        orderDetails storage _order = order[_id]; // storage keyword used because struct stored in blockchain
+
+        // Order must exist
+        require(_order.id == _id);
+
+        // Ensure only the maker can cancel their orders
+        require(address(_order.maker) == msg.sender); // casts struct component to address type
+
+        // Store all cancelled orders in special mapping to
+        // cancel the order
+        orderCancelled[_id] = true;
+        
+        // Emit cancellation event
+        emit Cancel(
+            _order.id,
+            _order.maker,
+            block.timestamp, // in epoch time
+            _order.tokenGet,
+            _order.amountGet,
+            _order.tokenGive,
+            _order.amountGive
+        );
+    }
 
 //----------------------------------------------------------------
     // Fill Orders

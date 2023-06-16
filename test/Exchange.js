@@ -197,7 +197,7 @@ describe('Exchange', () => {
         })
     })
 
-    describe('Making orders', () => {
+    describe('Making Orders', () => {
         let transaction, result
 
         describe('Test Valid Order Creation', async () => {
@@ -247,6 +247,56 @@ describe('Exchange', () => {
                 console.log(`\t   Selling Token: ${result.logs[0].args.tokenGive}`)
                 expect(result.logs[0].args.amountGive).to.be.equal(amount2)
                 console.log(`\t   Selling Amount: ${result.logs[0].args.amountGive}`)
+            })
+
+            describe('Order Actions', () => {
+                describe('Test Order Cancelation', () => {
+                    describe('Valid Cancelation', () => {
+                        beforeEach(async () => {
+                            transaction = await exchange.connect(trader1).cancelOrder(1)
+                            result = await transaction.wait()
+                        })
+
+                        it('Updates Cancelled Orders', async () => {
+                            expect(await exchange.orderCancelled(1)).to.be.equal(true)
+                        })
+
+                        it('Emits a Cancel event', async () => {
+
+                            // Check event name
+                            expect(result.logs[0].fragment.name).to.be.equal('Cancel')
+                            console.log(`\t   Event Name: ${result.logs[0].fragment.name}`)
+            
+                            // Check event details
+                            expect(result.logs[0].args.id).to.be.equal(1)
+                            console.log(`\t   Order ID: ${result.logs[0].args.id}`)
+                            expect(result.logs[0].args.maker).to.be.equal(await trader1.getAddress())
+                            console.log(`\t   Order Maker: ${result.logs[0].args.maker}`)
+                            expect(result.logs[0].args.timestamp).to.be.at.least(1)
+                            console.log(`\t   Epoch Time: ${result.logs[0].args.timestamp}`)
+                            expect(result.logs[0].args.tokenGet).to.be.equal(await token2.getAddress())
+                            console.log(`\t   Buying Token: ${result.logs[0].args.tokenGet}`)
+                            expect(result.logs[0].args.amountGet).to.be.equal(amount2)
+                            console.log(`\t   Buying Amount: ${result.logs[0].args.amountGet}`)
+                            expect(result.logs[0].args.tokenGive).to.be.equal(await token1.getAddress())
+                            console.log(`\t   Selling Token: ${result.logs[0].args.tokenGive}`)
+                            expect(result.logs[0].args.amountGive).to.be.equal(amount2)
+                            console.log(`\t   Selling Amount: ${result.logs[0].args.amountGive}`)
+                        })
+                    })
+                    describe('Invalid Cancelation', () => {
+                        it('Does not cancel unmade orders', async () => {
+                            await expect(exchange.connect(trader1).cancelOrder(99)).to.be.reverted
+                        })
+                        it('Only maker can cancel their order', async () => {
+                            await expect(exchange.connect(trader2).cancelOrder(1)).to.be.reverted
+                        })
+                    })
+                })
+    
+                describe('Filling Order', () => {
+                
+                })
             })
         })
 

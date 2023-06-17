@@ -53,6 +53,9 @@ contract Exchange {
     // Keep track of cancelled orders:
     mapping(uint256 => bool) public orderCancelled;
 
+    // Keep track of filled orders:
+    mapping(uint256 => bool) public orderFilled;
+
     // Deposit Event
     event Deposit(
         address token,
@@ -81,7 +84,7 @@ contract Exchange {
     );
 
     // Cancel Event
-    event Cancel(
+    event OrderCancelled(
         uint256 id,
         address maker,
         uint256 timestamp,
@@ -89,6 +92,18 @@ contract Exchange {
         uint256 amountGet,
         address tokenGive,
         uint256 amountGive
+    );
+
+    // Trade Event
+    event Trade(
+        uint256 id,
+        address maker,
+        uint256 timestamp,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive,
+        address taker
     );
 //----------------------------------------------------------------
 
@@ -164,7 +179,7 @@ contract Exchange {
         require(tokenBalance[_tokenGive][msg.sender] >= _amountGive);
 
         // Increment order count
-        orderCount = orderCount + 1;
+        orderCount++;
 
         order[orderCount] = orderDetails(
             orderCount,
@@ -206,7 +221,7 @@ contract Exchange {
         orderCancelled[_id] = true;
         
         // Emit cancellation event
-        emit Cancel(
+        emit OrderCancelled(
             _order.id,
             _order.maker,
             block.timestamp, // in epoch time
@@ -219,7 +234,81 @@ contract Exchange {
 
 //----------------------------------------------------------------
     // Fill Orders
+    function fillOrder(
+        uint256 _id
+     ) public {
+        // Fetch Order
+        orderDetails storage _order = order[_id]; // storage keyword used because struct stored in blockchain
+
+        // Order must exist
+        require(_id > 0 && _id <= orderCount, "Order does not exist");
+
+        // Make sure order isn't cancelled
+        require(!orderCancelled[_id]);
+
+        // Make sure order isn't already filled
+        require(!orderFilled[_id]);
+
+        // Swap Token Ownership (Trade)
+        trade(
+            _order.maker,
+            _order.tokenGet,
+            _order.amountGet,
+            _order.tokenGive,
+            _order.amountGive
+        );
+
+        // Change order status
+        orderFilled[_id] = true;
+
+        // Emit Order Fill Event
+        emit Trade(
+            _order.id,
+            _order.maker,
+            block.timestamp, // in epoch time
+            _order.tokenGet,
+            _order.amountGet,
+            _order.tokenGive,
+            _order.amountGive,
+            msg.sender // the taker
+        );
+    }
+
+    // Internal Trade Function
+    function trade(
+        address _maker,
+        address _tokenGet,
+        uint256 _amountGet,
+        address _tokenGive,
+        uint256 _amountGive
+    ) internal {
+
+        // Get taker fee amount
+        uint256 _takerFeeAmount = (_amountGet * feePercent) / 100;
+
+        // Transfer token1
+        tokenBalance[_tokenGet][msg.sender] = 
+            tokenBalance[_tokenGet][msg.sender] - 
+            (_amountGet + _takerFeeAmount);
+
+        tokenBalance[_tokenGet][_maker] = 
+            tokenBalance[_tokenGet][_maker] + 
+            _amountGet;
+
+        // Transfer token2
+        tokenBalance[_tokenGive][_maker] = 
+            tokenBalance[_tokenGive][_maker] - 
+            _amountGive;
+
+        tokenBalance[_tokenGive][msg.sender] = 
+            tokenBalance[_tokenGive][msg.sender] + 
+            _amountGive;
+
+        // Update exchange account
+        tokenBalance[_tokenGet][feeAccount] = 
+            tokenBalance[_tokenGet][feeAccount] + 
+            _takerFeeAmount;
+    }
 
 //----------------------------------------------------------------
-    // Charge Fees
 }

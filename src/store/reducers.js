@@ -15,24 +15,62 @@ export const providerReducer = (state = {}, action) => {
                 ...state, // update existing state by creating a copy
                 account: action.account // add account to the copy
             }
+        case 'ACCOUNT_BALANCE_LOADED':
+            return {
+                ...state, // update existing state by creating a copy
+                balance: action.balance // add balance to the copy
+            }
 
         default:
             return state
     }
 }
 
-export const tokens = (state = { loaded: false, contract: null, symbol: null }, action) => {
+const DEFAULT_TOKENS_STATE = {
+    loaded: false, 
+    contracts: [], 
+    symbols: [] 
+}
+export const tokensReducer = (state = DEFAULT_TOKENS_STATE, action) => {
     switch (action.type) {
-        case 'TOKEN_LOADED':
+        case 'TOKEN_1_LOADED':
             return {
                 ...state, // update existing state by creating a copy
                 loaded: true,
-                contract: action.token,
-                symbol: action.symbol
+                contracts: [...state.contracts, action.token],
+                symbols: [...state.symbols, action.symbol]
+            }
+        case 'TOKEN_2_LOADED':
+            return {
+                ...state, // update existing state by creating a copy
+                loaded: true,
+                contracts: [...state.contracts, action.token],
+                symbols: [...state.symbols, action.symbol]
+            }
+        case 'TOKEN_3_LOADED':
+            return {
+                ...state, // update existing state by creating a copy
+                loaded: true,
+                contracts: [...state.contracts, action.token],
+                symbols: [...state.symbols, action.symbol]
             }
 
         default:
             return state
+    }
+}
+
+export const exchangeReducer = (state = {loaded: false, contracts: []}, action) => {
+    switch (action.type) {
+        case 'EXCHANGE_LOADED':
+            return {
+                ...state, // update existing state by creating a copy
+                loaded: true,
+                contracts: [...state.contracts, action.exchange]
+            }
+
+            default:
+                return state
     }
 }
 

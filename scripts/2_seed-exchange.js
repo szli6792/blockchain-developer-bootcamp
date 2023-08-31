@@ -22,19 +22,19 @@ async function main() {
     const accounts = await ethers.getSigners()
 
     // Init Exchange on Local Blockchain
-    const Exchange = await ethers.getContractAt('Exchange', config[chainId].exchange.address) // create smart contract for Exchange
+    const Exchange = await ethers.getContractAt('Exchange', config[chainId].exchange.address) // get smart contract for Exchange
     console.log(`Exchange Fetched: ${await Exchange.getAddress()}`)       
 
     // Init Token1 on Local Blockchain
-    const Token1 = await ethers.getContractAt('Token', config[chainId].token1.address) // create smart contract for Token
+    const Token1 = await ethers.getContractAt('Token', config[chainId].token1.address) // get smart contract for Token
     console.log(`Token1 Fetched: ${await Token1.getAddress()}`)
     
     // Init Token1 on Local Blockchain
-    const Token2 = await ethers.getContractAt('Token', config[chainId].token2.address) // create smart contract for Token
+    const Token2 = await ethers.getContractAt('Token', config[chainId].token2.address) // get smart contract for Token
     console.log(`Token2 Fetched:: ${await Token2.getAddress()}`)
 
     // Init Token1 on Local Blockchain
-    const Token3 = await ethers.getContractAt('Token', config[chainId].token3.address) // create smart contract for Token
+    const Token3 = await ethers.getContractAt('Token', config[chainId].token3.address) // get smart contract for Token
     console.log(`Token3 Fetched:: ${await Token3.getAddress()}`)
     
     // Setup to distribute tokens to exchange
@@ -49,20 +49,20 @@ async function main() {
 
     // Fund trader1 with token1
     transaction = await Token1.connect(deployer).transfer(trader1, amount)
-    console.log(`Transferred ${amount} tokens from ${await deployer.getAddress()} to ${await trader1.getAddress()}`)
+    console.log(`Transferred ${amount} ${await Token1.symbol()} tokens from ${await deployer.getAddress()} to ${await trader1.getAddress()}`)
     
     // Fund trader2 with token2
     transaction = await Token2.connect(deployer).transfer(trader2, amount)
-    console.log(`Transferred ${amount} tokens from ${await deployer.getAddress()} to ${await trader2.getAddress()}`)
+    console.log(`Transferred ${amount} ${await Token2.symbol()} tokens from ${await deployer.getAddress()} to ${await trader2.getAddress()}`)
 
     // Fund trader3 with token3
     transaction = await Token3.connect(deployer).transfer(trader3, amount)
-    console.log(`Transferred ${amount} tokens from ${await deployer.getAddress()} to ${await trader3.getAddress()}`)
+    console.log(`Transferred ${amount} ${await Token3.symbol()} tokens from ${await deployer.getAddress()} to ${await trader3.getAddress()}`)
 
     // Traders approve and deposits all tokens to the exchange
     transaction = await Token1.connect(trader1).approve(Exchange, amount)
     await transaction.wait()
-    console.log(`Approved: ${amount} tokens from ${await trader1.address}`)
+    console.log(`Approved: ${amount} ${await Token1.symbol()} tokens from ${await trader1.address}`)
 
     transaction = await Exchange.connect(trader1).depositToken(Token1, amount)
     await transaction.wait()
@@ -70,7 +70,7 @@ async function main() {
 
     transaction = await Token2.connect(trader2).approve(Exchange, amount)
     await transaction.wait()
-    console.log(`Approved: ${amount} tokens from ${await trader2.address}`)
+    console.log(`Approved: ${amount} ${await Token2.symbol()} tokens from ${await trader2.address}`)
    
     transaction = await Exchange.connect(trader2).depositToken(Token2, amount)
     await transaction.wait()
@@ -78,7 +78,7 @@ async function main() {
 
     transaction = await Token3.connect(trader3).approve(Exchange, amount)
     await transaction.wait()
-    console.log(`Approved: ${amount} tokens from ${await trader3.address}`)
+    console.log(`Approved: ${amount} ${await Token3.symbol()} tokens from ${await trader3.address}`)
 
     transaction = await Exchange.connect(trader3).depositToken(Token3, amount)
     await transaction.wait()

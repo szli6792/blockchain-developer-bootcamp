@@ -1,32 +1,26 @@
 import { useEffect } from 'react'
-import { ethers } from 'ethers'
-import '../App.css';
+import { useDispatch } from 'react-redux' // A hook to use redux
+import { loadProvider, loadNetwork, loadAccount, loadToken } from '../store/blockchainInteractions'
 
 const config = require('../config.json') // import config file
-
-const TOKEN_ABI  = require('../abis/Token.json') // import token abi file
 
 function App() {
 
   // put JS scripts here
 
+  const dispatch = useDispatch()
+
   const loadBlockchainData = async () => {
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }) // passing in object that makes RPC call to node (how to talk to and through metamask)
-    console.log(accounts[0])
+    const account = await loadAccount(dispatch)
 
     // Connect Ethers to Blockchain
-    const provider = new ethers.BrowserProvider(window.ethereum) // puts entire metamask connection inside ethers
-    const { chainId } = await provider.getNetwork() // an example of object destructuring: in JS you can use curly braces to enter a key into the object that is being returned to get the value for the key:value pair
-    console.log(`${chainId}`)
+    const provider = loadProvider(dispatch)
 
     // Talk to the Token Smart Contract: MAKE SURE TO DEPLOY TOKENS FIRST!
-
+    const chainId = await loadNetwork(provider, dispatch)
 
     // Why use ABI's? Because it reduces the number of interactions (calls and returns) with the actual blockchain to the bare minimum (less $ spent)
-    const token = new ethers.Contract(config[chainId].token1.address, TOKEN_ABI, provider) // creates a local JS instance of the smart contract from a JSON array (the ABI)
-    console.log(await token.getAddress())
-    
-    console.log(await token.symbol())
+    const token = await loadToken(provider, config[chainId].token1.address, dispatch)
   }
 
   // update App component by passing in functions
@@ -34,6 +28,8 @@ function App() {
   useEffect(() => {
     loadBlockchainData()
   })
+
+  // use redux as a database to manage the state on the client side (it mirrors the blockchain)
 
   return (
     <div>

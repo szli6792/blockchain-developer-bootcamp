@@ -1,13 +1,18 @@
+// main entry point for entire react application
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './components/App';
+import './App.css';
 import reportWebVitals from './reportWebVitals';
+import { Provider } from 'react-redux' // Grab the Redux tooling for React
+import store from './store/store' // import the redux store (client database)
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  <Provider store={store}>
     <App />
-  </React.StrictMode>
+  </Provider>
 );
 
 // If you want to start measuring performance in your app, pass a function

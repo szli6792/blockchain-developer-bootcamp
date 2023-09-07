@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux' // A hook to use redux
-import { loadProvider, loadNetwork, loadAccount, loadTokens, loadExchange } from '../store/blockchainInteractions'
+import { loadProvider, loadNetwork, loadAccount, loadTokenPair, loadExchange } from '../store/blockchainInteractions'
+
 import Navbar from './Navbar'
+import Markets from './Markets'
 
 const config = require('../config.json') // import config file
 
@@ -35,7 +37,7 @@ function App() {
       //const Token1 = config[chainId].token1
       //const Token2 = config[chainId].token2
       //const Token3 = config[chainId].token3
-      await loadTokens(provider, [config[chainId].token1.address, config[chainId].token2.address, config[chainId].token3.address], dispatch)
+      await loadTokenPair(provider, [config[chainId].token1.address, config[chainId].token2.address], dispatch)
 
       // Load Exchange Contract
       await loadExchange(provider, config[chainId].exchange.address , dispatch)
@@ -62,6 +64,8 @@ function App() {
         <section className='exchange__section--left grid'>
 
           {/* Markets */}
+
+          <Markets />
 
           {/* Balance */}
 

@@ -40,7 +40,7 @@ export const loadAccount = async (provider, dispatch) => {
     return account
 }
 
-export const loadTokens = async (provider, addresses, dispatch) => {
+export const loadTokenPair = async (provider, addresses, dispatch) => {
     let token, symbol
 
     token = new ethers.Contract(addresses[0], TOKEN_ABI, provider) // creates a local JS instance of the smart contract from a JSON array (the ABI)
@@ -50,10 +50,6 @@ export const loadTokens = async (provider, addresses, dispatch) => {
     token = new ethers.Contract(addresses[1], TOKEN_ABI, provider) // creates a local JS instance of the smart contract from a JSON array (the ABI)
     symbol = await token.symbol()
     dispatch({ type: 'TOKEN_2_LOADED', token, symbol })
-
-    token = new ethers.Contract(addresses[2], TOKEN_ABI, provider) // creates a local JS instance of the smart contract from a JSON array (the ABI)
-    symbol = await token.symbol()
-    dispatch({ type: 'TOKEN_3_LOADED', token, symbol })
 
     return token
 }

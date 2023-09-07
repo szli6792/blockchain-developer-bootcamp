@@ -37,17 +37,10 @@ export const tokensReducer = (state = DEFAULT_TOKENS_STATE, action) => {
             return {
                 ...state, // update existing state by creating a copy
                 loaded: true,
-                contracts: [...state.contracts, action.token],
-                symbols: [...state.symbols, action.symbol]
+                contracts: [action.token],
+                symbols: [action.symbol]
             }
         case 'TOKEN_2_LOADED':
-            return {
-                ...state, // update existing state by creating a copy
-                loaded: true,
-                contracts: [...state.contracts, action.token],
-                symbols: [...state.symbols, action.symbol]
-            }
-        case 'TOKEN_3_LOADED':
             return {
                 ...state, // update existing state by creating a copy
                 loaded: true,

@@ -34,7 +34,8 @@ export const loadAccount = async (provider, dispatch) => {
    
     // Send balance to reducer
     const balance = await provider.getBalance(account)
-    dispatch({ type: 'ACCOUNT_BALANCE_LOADED', balance: JSON.stringify({ value: balance }, replacer)})
+    const format_balance = JSON.stringify({ value : balance }, replacer)
+    dispatch({ type: 'ACCOUNT_BALANCE_LOADED', balance: format_balance.slice(10,-2)})
 
     return account
 }

@@ -55,8 +55,75 @@ export const loadTokenPair = async (provider, addresses, dispatch) => {
 }
 
 export const loadExchange = async (provider, address, dispatch) => {
-    const exchange = new ethers.Contract(address, EXCHANGE_ABI, provider)
+    let exchange
+
+    exchange = new ethers.Contract(address, EXCHANGE_ABI, provider)
     dispatch({ type: 'EXCHANGE_LOADED', exchange })
 
     return exchange
+}
+
+// LOAD USER BALANCES OF TOKENS ON USER ACCOUNT VS EXCHANGE
+export const loadTokenBalances = async (exchange, tokens, account, dispatch) => {
+
+    const exchangeContract = exchange[0]
+
+    // Code to convert from big int
+    const replacer = (key, value) =>
+    typeof value === 'bigint' ? value.toString() : value
+
+    // Load token 1 user balance
+    let balance = await tokens[0].balanceOf(account)
+    let format_balance = JSON.stringify({ value : balance }, replacer)
+    dispatch({ type: 'TOKEN_1_BALANCE_LOADED', balance: format_balance.slice(10,-2)})
+
+    
+    // Load token 1 exchange balance
+    balance = await exchangeContract.balanceOf(tokens[0], account)
+    format_balance = JSON.stringify({ value : balance }, replacer)
+    dispatch({ type: 'EXCHANGE_TOKEN_1_BALANCE_LOADED', balance: format_balance.slice(10,-2)})
+    
+
+    // Load token 2 user balance
+    balance = await tokens[1].balanceOf(account)
+    format_balance = JSON.stringify({ value : balance }, replacer)
+    dispatch({ type: 'TOKEN_2_BALANCE_LOADED', balance: format_balance.slice(10,-2)})
+
+    // Load token 2 exchange balance
+    balance = await exchangeContract.balanceOf(tokens[1], account)
+    format_balance = JSON.stringify({ value : balance }, replacer)
+    dispatch({ type: 'EXCHANGE_TOKEN_2_BALANCE_LOADED', balance: format_balance.slice(10,-2)})
+
+    return loadTokenBalances
+}
+
+export const subscribeToEvents = (exchange, dispatch) => {
+    exchange.on('Deposit', (token, user, amount, balance, event) => {
+        dispatch({ type: 'TRANSFER_SUCCESS', events : event.fragment})
+    })
+}
+
+export const transferTokens = async (provider, exchange, transferType, token, amount, dispatch) => {
+
+    let transaction
+
+    dispatch({ type: 'TRANSFER_REQUEST'})
+
+    try {
+
+        const signer = await provider.getSigner()
+        const format_amount = ethers.parseUnits(amount.toString(), 18) // Big Int conversion alternate
+
+        // approve
+        transaction = await token.connect(signer).approve(exchange[0], format_amount)
+        await transaction.wait()
+
+        // deposit
+        transaction = await exchange[0].connect(signer).depositToken(token, format_amount)
+        await transaction.wait()
+
+    } catch(error) {
+        dispatch({ type: 'TRANSFER_FAIL'})
+    }
+
 }

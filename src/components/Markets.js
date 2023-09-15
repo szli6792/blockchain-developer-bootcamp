@@ -13,7 +13,7 @@ const Markets = () => {
 
     const chainId = useSelector(state => state.providerReducer.chainId)
     
-    // Cheq if the tokens are deployed on the selected network
+    // Check if the tokens are deployed on the selected network
     let tokensLoaded
     try {
         tokensLoaded = config[chainId].token1
